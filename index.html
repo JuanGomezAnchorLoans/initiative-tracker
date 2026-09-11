@@ -7,7 +7,462 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css" />
+<style>
+:root {
+  --bg: #f4f5f7;
+  --card: #ffffff;
+  --border: #e4e7ec;
+  --border-strong: #d0d5dd;
+  --text: #101828;
+  --text-muted: #667085;
+  --text-faint: #98a2b3;
+
+  --blue-100: #e7edfc;
+  --blue-500: #3d6fe0;
+  --blue-600: #2e5aac;
+  --blue-700: #1d3f91;
+  --navy-900: #0b1f3a;
+
+  --orange-500: #dc7609;
+  --orange-100: #fbead2;
+  --green-600: #1d9a6c;
+  --green-100: #e3f5ec;
+  --gray-400: #98a2b3;
+  --gray-100: #eef1f4;
+  --purple-500: #7a5af8;
+  --purple-100: #ece8fe;
+  --pink-500: #e0559f;
+  --pink-100: #fbe6f2;
+
+  --radius: 10px;
+  --shadow-card: 0 1px 2px rgba(16, 24, 40, 0.04);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: inherit;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app { max-width: 1560px; margin: 0 auto; padding: 0 28px 40px; }
+
+/* ---------- Masthead ---------- */
+.masthead {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 26px 0 4px;
+  flex-wrap: wrap;
+}
+.masthead-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.01em;
+}
+.masthead-divider { color: var(--text-faint); font-size: 20px; }
+.masthead-sub { font-size: 18px; font-weight: 500; color: var(--text-muted); }
+
+/* ---------- Tab strip ---------- */
+.tabstrip {
+  display: flex;
+  gap: 28px;
+  padding: 14px 0 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 22px;
+}
+.tab {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text-faint);
+  padding: 0 0 12px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  font-family: inherit;
+}
+.tab:hover { color: var(--text-muted); }
+.tab-active {
+  color: var(--blue-600);
+  border-bottom: 2px solid var(--blue-500);
+}
+
+/* ---------- Top bar ---------- */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.topbar-right { display: flex; align-items: center; gap: 12px; }
+.sync-status { font-size: 12px; color: var(--text-faint); }
+
+.icon-btn {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text-muted);
+  font-size: 15px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, transform 0.15s;
+}
+.icon-btn:hover { background: var(--gray-100); }
+.icon-btn.anchor-toss { animation: anchorToss 0.7s cubic-bezier(0.34, 1.56, 0.64, 1); transform-origin: top center; }
+@keyframes anchorToss {
+  0%   { transform: translateY(-10px) rotate(0deg); }
+  15%  { transform: translateY(3px) rotate(-18deg); }
+  30%  { transform: translateY(-2px) rotate(14deg); }
+  45%  { transform: translateY(1px) rotate(-10deg); }
+  60%  { transform: translateY(0) rotate(7deg); }
+  75%  { transform: translateY(0) rotate(-4deg); }
+  90%  { transform: translateY(0) rotate(2deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+.btn-primary {
+  background: var(--navy-900);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.btn-primary:hover { background: #142a4d; }
+
+.btn-ghost {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 13px;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.btn-ghost:hover { color: var(--text); }
+
+/* ---------- Stat row ---------- */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--stat-accent, var(--blue-500));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  padding: 16px 18px;
+}
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.stat-value { font-size: 28px; font-weight: 800; line-height: 1; }
+.stat-caption { font-size: 12px; color: var(--text-muted); margin-top: 6px; }
+
+/* ---------- Board ---------- */
+.board {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  align-items: flex-start;
+}
+.board-empty { color: var(--text-faint); font-size: 14px; padding: 40px; }
+
+.column {
+  flex: 0 0 288px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--col-accent, var(--blue-500));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 260px);
+}
+.column.drag-over { background: var(--blue-100); }
+
+.column-header { padding: 14px 14px 10px; border-bottom: 1px solid var(--border); }
+.column-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+.column-title {
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+  border-radius: 5px;
+  padding: 2px 4px;
+  margin-left: -4px;
+  flex: 1;
+  word-break: break-word;
+}
+.column-title:focus { background: var(--gray-100); }
+.column-menu-btn {
+  background: none; border: none; color: var(--text-faint);
+  cursor: pointer; font-size: 16px; padding: 0 4px; line-height: 1;
+}
+.column-menu-btn:hover { color: #d92d20; }
+
+.column-meta { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.meta-row { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
+.meta-label { color: var(--text-faint); text-transform: uppercase; font-size: 10px; letter-spacing: 0.05em; width: 40px; flex-shrink: 0; }
+.meta-value {
+  outline: none;
+  border-radius: 4px;
+  padding: 1px 4px;
+  margin-left: -4px;
+  cursor: text;
+  min-width: 20px;
+}
+.meta-value:hover, .meta-value:focus { background: var(--gray-100); }
+.meta-value.placeholder { color: var(--text-faint); font-style: italic; }
+.meta-value.overdue { color: #d92d20; font-weight: 600; }
+
+.subtask-list { flex: 1; overflow-y: auto; padding: 10px 10px 4px; display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+.subtask-empty { color: var(--text-faint); font-size: 12px; font-style: italic; padding: 6px 4px; }
+
+.card-item {
+  background: #fbfbfc;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 9px 10px;
+  cursor: grab;
+}
+.card-item.dragging { opacity: 0.4; }
+.card-item-name {
+  font-size: 13px;
+  font-weight: 600;
+  outline: none;
+  border-radius: 4px;
+  padding: 1px 3px;
+  margin: -1px -3px 6px;
+  word-break: break-word;
+}
+.card-item-name:hover, .card-item-name:focus { background: var(--gray-100); }
+
+.card-item-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; }
+.card-owner {
+  font-size: 11px; color: var(--text-muted);
+  outline: none; border-radius: 4px; padding: 1px 4px; margin-left: -4px;
+  cursor: text; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.card-owner:hover, .card-owner:focus { background: var(--gray-100); white-space: normal; }
+.card-owner.placeholder { color: var(--text-faint); font-style: italic; }
+
+.card-due {
+  font-size: 11px; color: var(--text-faint);
+  border: none; background: transparent; cursor: pointer; padding: 1px 2px; border-radius: 4px;
+  font-family: inherit;
+}
+.card-due:hover { background: var(--gray-100); }
+.card-due.overdue { color: #d92d20; font-weight: 600; }
+
+.status-pill {
+  border: none;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-position: right 6px center;
+  width: 100%;
+  margin-top: 8px;
+  text-align: center;
+}
+.status-not-started { background: var(--gray-100); color: #475467; }
+.status-in-progress { background: var(--blue-100); color: var(--blue-700); }
+.status-completed { background: var(--green-100); color: var(--green-600); }
+
+.card-delete {
+  background: none; border: none; color: var(--text-faint);
+  font-size: 12px; cursor: pointer; padding: 0 2px; line-height: 1;
+  opacity: 0; transition: opacity 0.1s;
+}
+.card-item:hover .card-delete { opacity: 1; }
+.card-delete:hover { color: #d92d20; }
+
+.add-subtask-btn {
+  margin: 4px 10px 10px;
+  padding: 7px 8px;
+  border-radius: 7px;
+  border: 1px dashed var(--border-strong);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  text-align: left;
+}
+.add-subtask-btn:hover { background: var(--gray-100); border-color: var(--text-faint); }
+
+.column.ghost {
+  flex: 0 0 220px;
+  border: 1px dashed var(--border-strong);
+  border-top: 1px dashed var(--border-strong);
+  box-shadow: none;
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  min-height: 120px;
+  background: transparent;
+}
+.ghost-btn {
+  background: none; border: none;
+  color: var(--text-muted); font-size: 13px; font-weight: 600;
+  cursor: pointer; padding: 10px 16px;
+}
+.ghost-btn:hover { color: var(--blue-600); }
+
+/* inline new-project input */
+.new-column-form { padding: 14px; display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.new-column-form input {
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 7px 9px;
+  font-size: 13px;
+  font-family: inherit;
+}
+.new-column-form-actions { display: flex; gap: 8px; }
+
+/* ---------- Toast ---------- */
+.toast {
+  position: fixed;
+  bottom: 20px; left: 50%;
+  transform: translateX(-50%);
+  background: var(--navy-900);
+  color: #fff;
+  padding: 9px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  z-index: 50;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.toast.hidden { opacity: 0; pointer-events: none; transform: translate(-50%, 8px); }
+.toast.error { background: #b42318; }
+
+/* ---------- Access gate ---------- */
+.gate-overlay {
+  position: fixed; inset: 0;
+  background: rgba(16, 24, 40, 0.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+}
+.gate-overlay.hidden { display: none; }
+.gate-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 28px;
+  width: 300px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
+}
+.gate-card h2 { margin: 0 0 6px; font-size: 17px; }
+.gate-card p { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); }
+.gate-card input {
+  width: 100%; padding: 9px 10px; border: 1px solid var(--border-strong);
+  border-radius: 7px; font-size: 14px; margin-bottom: 10px; font-family: inherit;
+}
+.gate-card .btn-primary { width: 100%; padding: 9px; }
+.gate-error { color: #d92d20; font-size: 12px; margin-top: 8px; }
+.gate-error.hidden { display: none; }
+
+/* ---------- My Tasks tab ---------- */
+.my-tasks { display: flex; flex-direction: column; gap: 18px; }
+
+.owner-filter { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.owner-filter-label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-faint); margin-right: 4px; }
+.owner-pill {
+  border: 1px solid var(--border-strong);
+  background: var(--card);
+  color: var(--text-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.owner-pill.active {
+  background: var(--navy-900);
+  border-color: var(--navy-900);
+  color: #fff;
+}
+.owner-pill:hover:not(.active) { background: var(--gray-100); }
+
+.task-list { display: flex; flex-direction: column; gap: 8px; }
+.task-list-empty {
+  color: var(--text-faint);
+  font-size: 14px;
+  padding: 40px;
+  text-align: center;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.task-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto auto auto;
+  align-items: center;
+  gap: 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  box-shadow: var(--shadow-card);
+  padding: 12px 14px;
+}
+.task-row-name { font-size: 14px; font-weight: 600; }
+.task-row-project {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--gray-100);
+  border-radius: 999px;
+  padding: 4px 10px;
+  white-space: nowrap;
+}
+.task-row-owner { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
+.task-row-due {
+  font-size: 12px;
+  color: var(--text-faint);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+}
+.task-row-due.overdue { color: #d92d20; font-weight: 600; }
+.task-row .status-pill { width: auto; margin-top: 0; padding: 4px 10px; }
+
+@media (max-width: 720px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  #app { padding: 0 14px 30px; }
+  .task-row { grid-template-columns: 1fr; justify-items: start; }
+}
+
+</style>
 </head>
 <body>
 
@@ -56,6 +511,687 @@
   </div>
 </div>
 
-<script src="app.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const POLL_MS = 20000;
+  const COLOR_CYCLE = ['Blue', 'Orange', 'Green', 'Purple', 'Pink', 'Gray'];
+  const COLOR_VARS = {
+    Blue: 'var(--blue-500)',
+    Orange: 'var(--orange-500)',
+    Green: 'var(--green-600)',
+    Purple: 'var(--purple-500)',
+    Pink: 'var(--pink-500)',
+    Gray: 'var(--gray-400)',
+  };
+  const STAT_ACCENTS = ['var(--blue-500)', 'var(--navy-900)', 'var(--orange-500)', 'var(--green-600)'];
+  const STATUSES = ['Not Started', 'In Progress', 'Completed'];
+  const OWNER_NAMES = ['Maria', 'JuanSe', 'Santi'];
+
+  const els = {
+    board: document.getElementById('board'),
+    boardEmpty: document.getElementById('boardEmpty'),
+    statsRow: document.getElementById('statsRow'),
+    syncStatus: document.getElementById('syncStatus'),
+    refreshBtn: document.getElementById('refreshBtn'),
+    addProjectBtn: document.getElementById('addProjectBtn'),
+    toast: document.getElementById('toast'),
+    gateOverlay: document.getElementById('gateOverlay'),
+    gateInput: document.getElementById('gateInput'),
+    gateSubmit: document.getElementById('gateSubmit'),
+    gateError: document.getElementById('gateError'),
+    tabBoard: document.getElementById('tabBoard'),
+    tabTasks: document.getElementById('tabTasks'),
+    statsRowEl: document.getElementById('statsRow'),
+    myTasksView: document.getElementById('myTasksView'),
+    ownerFilter: document.getElementById('ownerFilter'),
+    taskList: document.getElementById('taskList'),
+  };
+
+  let state = { projects: [], subtasks: [] };
+  let pollTimer = null;
+  let addingColumn = false;
+  let activeTab = 'board';
+  let selectedOwners = new Set(OWNER_NAMES);
+
+  // ---------- API ----------
+
+  function boardKey() {
+    return localStorage.getItem('board_access_code') || '';
+  }
+
+  async function api(path, options = {}) {
+    const res = await fetch(path, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'x-board-key': boardKey(),
+        ...(options.headers || {}),
+      },
+    });
+    if (res.status === 401) {
+      showGate();
+      throw new Error('Access code required');
+    }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Request failed (${res.status})`);
+    }
+    if (res.status === 204) return null;
+    return res.json();
+  }
+
+  // ---------- Gate ----------
+
+  function showGate() {
+    els.gateOverlay.classList.remove('hidden');
+  }
+  function hideGate() {
+    els.gateOverlay.classList.add('hidden');
+  }
+  els.gateSubmit.addEventListener('click', async () => {
+    localStorage.setItem('board_access_code', els.gateInput.value.trim());
+    els.gateError.classList.add('hidden');
+    try {
+      await loadBoard();
+      hideGate();
+    } catch (e) {
+      els.gateError.classList.remove('hidden');
+    }
+  });
+  els.gateInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') els.gateSubmit.click();
+  });
+
+  // ---------- Toast ----------
+
+  let toastTimer = null;
+  function toast(message, isError = false) {
+    els.toast.textContent = message;
+    els.toast.classList.toggle('error', isError);
+    els.toast.classList.remove('hidden');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => els.toast.classList.add('hidden'), 2600);
+  }
+
+  // ---------- Load & render ----------
+
+  async function loadBoard(showAnimation = false) {
+    if (showAnimation) els.refreshBtn.classList.add('anchor-toss');
+    try {
+      const data = await api('/api/board');
+      state.projects = data.projects.sort((a, b) => a.order - b.order);
+      state.subtasks = data.subtasks.sort((a, b) => a.order - b.order);
+      render();
+      els.syncStatus.textContent = 'Synced just now';
+    } catch (e) {
+      if (e.message !== 'Access code required') {
+        els.syncStatus.textContent = 'Sync failed';
+        toast(e.message, true);
+      }
+    } finally {
+      setTimeout(() => els.refreshBtn.classList.remove('anchor-toss'), 700);
+    }
+  }
+
+  function setActiveTab(tab) {
+    activeTab = tab;
+    els.tabBoard.classList.toggle('tab-active', tab === 'board');
+    els.tabTasks.classList.toggle('tab-active', tab === 'tasks');
+    els.statsRowEl.hidden = tab !== 'board';
+    els.board.hidden = tab !== 'board';
+    els.boardEmpty.hidden = tab !== 'board' || state.projects.length > 0;
+    els.addProjectBtn.hidden = tab !== 'board';
+    els.myTasksView.hidden = tab !== 'tasks';
+    render();
+  }
+
+  function render() {
+    if (activeTab === 'board') {
+      renderStats();
+      renderColumns();
+    } else {
+      renderMyTasks();
+    }
+  }
+
+  function renderStats() {
+    const today = new Date().toISOString().slice(0, 10);
+    const total = state.subtasks.length;
+    const overdue = state.subtasks.filter((s) => s.dueDate && s.dueDate < today && s.status !== 'Completed').length;
+    const completed = state.subtasks.filter((s) => s.status === 'Completed').length;
+    const stats = [
+      { label: 'Projects', value: state.projects.length, caption: 'Active columns' },
+      { label: 'Subtasks', value: total, caption: 'Across all projects' },
+      { label: 'Overdue', value: overdue, caption: 'Needs attention' },
+      { label: 'Completed', value: completed, caption: total ? `${Math.round((completed / total) * 100)}% of all subtasks` : '—' },
+    ];
+    els.statsRow.innerHTML = '';
+    stats.forEach((s, i) => {
+      const card = document.createElement('div');
+      card.className = 'stat-card';
+      card.style.setProperty('--stat-accent', STAT_ACCENTS[i]);
+      card.innerHTML = `
+        <div class="stat-label">${s.label}</div>
+        <div class="stat-value">${s.value}</div>
+        <div class="stat-caption">${s.caption}</div>
+      `;
+      els.statsRow.appendChild(card);
+    });
+  }
+
+  // ---------- My Tasks ----------
+
+  function renderMyTasks() {
+    renderOwnerFilter();
+    renderTaskList();
+  }
+
+  function renderOwnerFilter() {
+    els.ownerFilter.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'owner-filter-label';
+    label.textContent = 'Show tasks for';
+    els.ownerFilter.appendChild(label);
+
+    OWNER_NAMES.forEach((name) => {
+      const pill = document.createElement('button');
+      pill.className = 'owner-pill' + (selectedOwners.has(name) ? ' active' : '');
+      pill.textContent = name;
+      pill.addEventListener('click', () => {
+        if (selectedOwners.has(name)) selectedOwners.delete(name);
+        else selectedOwners.add(name);
+        renderMyTasks();
+      });
+      els.ownerFilter.appendChild(pill);
+    });
+  }
+
+  function renderTaskList() {
+    els.taskList.innerHTML = '';
+
+    const matches = state.subtasks.filter((s) => {
+      if (selectedOwners.size === 0) return false;
+      const owner = (s.owner || '').toLowerCase();
+      return [...selectedOwners].some((name) => owner.includes(name.toLowerCase()));
+    });
+
+    matches.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'task-list-empty';
+      empty.textContent = selectedOwners.size === 0
+        ? 'Select one or more names above to see their tasks.'
+        : 'No tasks found for the selected people.';
+      els.taskList.appendChild(empty);
+      return;
+    }
+
+    matches.forEach((s) => els.taskList.appendChild(renderTaskRow(s)));
+  }
+
+  function renderTaskRow(subtask) {
+    const row = document.createElement('div');
+    row.className = 'task-row';
+
+    const name = document.createElement('div');
+    name.className = 'task-row-name';
+    name.textContent = subtask.name || 'Untitled subtask';
+
+    const project = document.createElement('span');
+    project.className = 'task-row-project';
+    const projectObj = state.projects.find((p) => p.id === subtask.projectId);
+    project.textContent = projectObj ? projectObj.name : 'Unassigned project';
+
+    const owner = document.createElement('span');
+    owner.className = 'task-row-owner';
+    owner.textContent = subtask.owner || 'Unassigned';
+
+    const due = document.createElement('button');
+    due.className = 'task-row-due';
+    due.textContent = subtask.dueDate ? formatDate(subtask.dueDate) : 'No date';
+    if (isOverdue(subtask.dueDate, subtask.status)) due.classList.add('overdue');
+    due.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.value = subtask.dueDate || '';
+      input.className = 'task-row-due';
+      due.replaceWith(input);
+      input.focus();
+      input.addEventListener('change', () => saveSubtask(subtask.id, { dueDate: input.value || null }));
+      input.addEventListener('blur', () => render());
+    });
+
+    const status = document.createElement('select');
+    status.className = `status-pill status-${subtask.status.toLowerCase().replace(/\s+/g, '-')}`;
+    STATUSES.forEach((s) => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      if (s === subtask.status) opt.selected = true;
+      status.appendChild(opt);
+    });
+    status.addEventListener('change', () => {
+      status.className = `status-pill status-${status.value.toLowerCase().replace(/\s+/g, '-')}`;
+      saveSubtask(subtask.id, { status: status.value });
+    });
+
+    row.append(name, project, owner, due, status);
+    return row;
+  }
+
+  function renderColumns() {
+    els.board.innerHTML = '';
+    els.boardEmpty.hidden = state.projects.length > 0;
+
+    state.projects.forEach((project) => {
+      els.board.appendChild(renderColumn(project));
+    });
+
+    els.board.appendChild(renderGhostColumn());
+  }
+
+  function formatDate(iso) {
+    if (!iso) return null;
+    const d = new Date(iso + 'T00:00:00');
+    if (Number.isNaN(d.getTime())) return null;
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  function isOverdue(iso, status) {
+    if (!iso || status === 'Completed') return false;
+    return iso < new Date().toISOString().slice(0, 10);
+  }
+
+  // ---------- Column ----------
+
+  function renderColumn(project) {
+    const col = document.createElement('div');
+    col.className = 'column';
+    col.dataset.projectId = project.id;
+    col.style.setProperty('--col-accent', COLOR_VARS[project.color] || 'var(--blue-500)');
+
+    const header = document.createElement('div');
+    header.className = 'column-header';
+
+    const titleRow = document.createElement('div');
+    titleRow.className = 'column-title-row';
+
+    const title = document.createElement('div');
+    title.className = 'column-title';
+    title.contentEditable = 'true';
+    title.spellcheck = false;
+    title.textContent = project.name || 'Untitled project';
+    title.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); title.blur(); } });
+    title.addEventListener('blur', () => {
+      const value = title.textContent.trim() || 'Untitled project';
+      title.textContent = value;
+      if (value !== project.name) saveProject(project.id, { name: value });
+    });
+
+    const menuBtn = document.createElement('button');
+    menuBtn.className = 'column-menu-btn';
+    menuBtn.title = 'Delete project';
+    menuBtn.textContent = '✕';
+    menuBtn.addEventListener('click', () => deleteProject(project));
+
+    titleRow.append(title, menuBtn);
+
+    const meta = document.createElement('div');
+    meta.className = 'column-meta';
+    meta.appendChild(metaRow('Owner', project.owner, 'text', (val) => saveProject(project.id, { owner: val })));
+    meta.appendChild(metaRow('Due', project.dueDate, 'date', (val) => saveProject(project.id, { dueDate: val })));
+
+    header.append(titleRow, meta);
+
+    const list = document.createElement('div');
+    list.className = 'subtask-list';
+    list.addEventListener('dragover', (e) => { e.preventDefault(); col.classList.add('drag-over'); });
+    list.addEventListener('dragleave', () => col.classList.remove('drag-over'));
+    list.addEventListener('drop', (e) => onDrop(e, project.id, list));
+
+    const subtasks = state.subtasks.filter((s) => s.projectId === project.id);
+    if (subtasks.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'subtask-empty';
+      empty.textContent = 'No subtasks yet';
+      list.appendChild(empty);
+    } else {
+      subtasks.forEach((s) => list.appendChild(renderCard(s)));
+    }
+
+    const addBtn = document.createElement('button');
+    addBtn.className = 'add-subtask-btn';
+    addBtn.textContent = '+ Add subtask';
+    addBtn.addEventListener('click', () => createSubtask(project.id));
+
+    col.append(header, list, addBtn);
+    return col;
+  }
+
+  function metaRow(label, value, type, onSave) {
+    const row = document.createElement('div');
+    row.className = 'meta-row';
+    const lbl = document.createElement('span');
+    lbl.className = 'meta-label';
+    lbl.textContent = label;
+
+    const val = document.createElement('span');
+    val.className = 'meta-value';
+
+    if (type === 'date') {
+      val.textContent = value ? formatDate(value) : 'Set date';
+      if (!value) val.classList.add('placeholder');
+      if (isOverdue(value, null)) val.classList.add('overdue');
+      val.tabIndex = 0;
+      val.addEventListener('click', () => openDateInput(val, value, onSave));
+    } else {
+      val.textContent = value || 'Unassigned';
+      if (!value) val.classList.add('placeholder');
+      val.contentEditable = 'true';
+      val.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); val.blur(); } });
+      val.addEventListener('focus', () => { if (val.classList.contains('placeholder')) val.textContent = ''; });
+      val.addEventListener('blur', () => {
+        const text = val.textContent.trim();
+        val.textContent = text || 'Unassigned';
+        val.classList.toggle('placeholder', !text);
+        if (text !== (value || '')) onSave(text);
+      });
+    }
+
+    row.append(lbl, val);
+    return row;
+  }
+
+  function openDateInput(anchor, value, onSave) {
+    const input = document.createElement('input');
+    input.type = 'date';
+    input.value = value || '';
+    input.className = 'meta-value';
+    anchor.replaceWith(input);
+    input.focus();
+    const commit = () => {
+      onSave(input.value || null);
+    };
+    input.addEventListener('change', commit);
+    input.addEventListener('blur', () => render());
+  }
+
+  function renderGhostColumn() {
+    const col = document.createElement('div');
+    col.className = 'column ghost';
+
+    if (!addingColumn) {
+      const btn = document.createElement('button');
+      btn.className = 'ghost-btn';
+      btn.textContent = '+ Add project';
+      btn.addEventListener('click', () => { addingColumn = true; render(); });
+      col.appendChild(btn);
+      return col;
+    }
+
+    const form = document.createElement('div');
+    form.className = 'new-column-form';
+    const input = document.createElement('input');
+    input.placeholder = 'Project name';
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') submit();
+      if (e.key === 'Escape') { addingColumn = false; render(); }
+    });
+    const actions = document.createElement('div');
+    actions.className = 'new-column-form-actions';
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-primary';
+    saveBtn.textContent = 'Add';
+    saveBtn.addEventListener('click', submit);
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn-ghost';
+    cancelBtn.textContent = 'Cancel';
+    cancelBtn.addEventListener('click', () => { addingColumn = false; render(); });
+
+    async function submit() {
+      const name = input.value.trim();
+      if (!name) return;
+      const maxOrder = state.projects.reduce((m, p) => Math.max(m, p.order), 0);
+      const color = COLOR_CYCLE[state.projects.length % COLOR_CYCLE.length];
+      try {
+        const project = await api('/api/projects', {
+          method: 'POST',
+          body: JSON.stringify({ name, order: maxOrder + 1, color }),
+        });
+        state.projects.push(project);
+        addingColumn = false;
+        render();
+        toast('Project added');
+      } catch (e) {
+        toast(e.message, true);
+      }
+    }
+
+    actions.append(saveBtn, cancelBtn);
+    form.append(input, actions);
+    col.appendChild(form);
+    setTimeout(() => input.focus(), 0);
+    return col;
+  }
+
+  // ---------- Subtask card ----------
+
+  function renderCard(subtask) {
+    const card = document.createElement('div');
+    card.className = 'card-item';
+    card.draggable = true;
+    card.dataset.subtaskId = subtask.id;
+
+    card.addEventListener('dragstart', (e) => {
+      card.classList.add('dragging');
+      e.dataTransfer.setData('text/plain', subtask.id);
+    });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+
+    const topRow = document.createElement('div');
+    topRow.style.display = 'flex';
+    topRow.style.justifyContent = 'space-between';
+    topRow.style.alignItems = 'flex-start';
+
+    const name = document.createElement('div');
+    name.className = 'card-item-name';
+    name.contentEditable = 'true';
+    name.spellcheck = false;
+    name.textContent = subtask.name || 'Untitled subtask';
+    name.style.flex = '1';
+    name.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); name.blur(); } });
+    name.addEventListener('blur', () => {
+      const value = name.textContent.trim() || 'Untitled subtask';
+      name.textContent = value;
+      if (value !== subtask.name) saveSubtask(subtask.id, { name: value });
+    });
+
+    const del = document.createElement('button');
+    del.className = 'card-delete';
+    del.textContent = '✕';
+    del.title = 'Delete subtask';
+    del.addEventListener('click', () => deleteSubtask(subtask));
+
+    topRow.append(name, del);
+
+    const row = document.createElement('div');
+    row.className = 'card-item-row';
+
+    const owner = document.createElement('span');
+    owner.className = 'card-owner';
+    owner.contentEditable = 'true';
+    owner.textContent = subtask.owner || 'Unassigned';
+    if (!subtask.owner) owner.classList.add('placeholder');
+    owner.addEventListener('focus', () => { if (owner.classList.contains('placeholder')) owner.textContent = ''; });
+    owner.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); owner.blur(); } });
+    owner.addEventListener('blur', () => {
+      const value = owner.textContent.trim();
+      owner.textContent = value || 'Unassigned';
+      owner.classList.toggle('placeholder', !value);
+      if (value !== (subtask.owner || '')) saveSubtask(subtask.id, { owner: value });
+    });
+
+    const due = document.createElement('button');
+    due.className = 'card-due';
+    due.textContent = subtask.dueDate ? formatDate(subtask.dueDate) : 'No date';
+    if (isOverdue(subtask.dueDate, subtask.status)) due.classList.add('overdue');
+    due.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.value = subtask.dueDate || '';
+      input.className = 'card-due';
+      due.replaceWith(input);
+      input.focus();
+      input.addEventListener('change', () => saveSubtask(subtask.id, { dueDate: input.value || null }));
+      input.addEventListener('blur', () => render());
+    });
+
+    row.append(owner, due);
+
+    const status = document.createElement('select');
+    status.className = `status-pill status-${subtask.status.toLowerCase().replace(/\s+/g, '-')}`;
+    STATUSES.forEach((s) => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      if (s === subtask.status) opt.selected = true;
+      status.appendChild(opt);
+    });
+    status.addEventListener('change', () => {
+      status.className = `status-pill status-${status.value.toLowerCase().replace(/\s+/g, '-')}`;
+      saveSubtask(subtask.id, { status: status.value });
+    });
+
+    card.append(topRow, row, status);
+    return card;
+  }
+
+  // Figures out where in the target column the card was dropped (based on
+  // cursor position relative to the other cards already there) and computes
+  // a fractional order value that slots it exactly into that spot — works
+  // the same whether it's a reorder within a column or a move to another one.
+  function computeInsertionOrder(projectId, excludeId, clientY, listEl) {
+    const siblingEls = [...listEl.querySelectorAll('.card-item')].filter(
+      (el) => el.dataset.subtaskId !== excludeId
+    );
+    let insertBeforeId = null;
+    for (const el of siblingEls) {
+      const rect = el.getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) {
+        insertBeforeId = el.dataset.subtaskId;
+        break;
+      }
+    }
+
+    const siblings = state.subtasks
+      .filter((s) => s.projectId === projectId && s.id !== excludeId)
+      .sort((a, b) => a.order - b.order);
+
+    if (siblings.length === 0) return 1;
+    if (insertBeforeId === null) return siblings[siblings.length - 1].order + 1;
+
+    const idx = siblings.findIndex((s) => s.id === insertBeforeId);
+    if (idx === 0) return siblings[0].order - 1;
+    return (siblings[idx - 1].order + siblings[idx].order) / 2;
+  }
+
+  function onDrop(e, projectId, listEl) {
+    e.preventDefault();
+    listEl.closest('.column').classList.remove('drag-over');
+    const id = e.dataTransfer.getData('text/plain');
+    const subtask = state.subtasks.find((s) => s.id === id);
+    if (!subtask) return;
+
+    const newOrder = computeInsertionOrder(projectId, id, e.clientY, listEl);
+    if (subtask.projectId === projectId && subtask.order === newOrder) return;
+
+    subtask.projectId = projectId;
+    subtask.order = newOrder;
+    render();
+    saveSubtask(id, { projectId, order: newOrder });
+  }
+
+  // ---------- Mutations ----------
+
+  async function saveProject(id, patch) {
+    const project = state.projects.find((p) => p.id === id);
+    if (project) Object.assign(project, patch);
+    try {
+      await api(`/api/projects/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
+  async function deleteProject(project) {
+    if (!confirm(`Delete "${project.name}" and all its subtasks? This can't be undone.`)) return;
+    state.projects = state.projects.filter((p) => p.id !== project.id);
+    state.subtasks = state.subtasks.filter((s) => s.projectId !== project.id);
+    render();
+    try {
+      await api(`/api/projects/${project.id}`, { method: 'DELETE' });
+      toast('Project deleted');
+    } catch (e) {
+      toast(e.message, true);
+      loadBoard();
+    }
+  }
+
+  async function createSubtask(projectId) {
+    const siblings = state.subtasks.filter((s) => s.projectId === projectId);
+    const order = siblings.length ? Math.max(...siblings.map((s) => s.order)) + 1 : 1;
+    try {
+      const subtask = await api('/api/subtasks', {
+        method: 'POST',
+        body: JSON.stringify({ name: 'New subtask', projectId, status: 'Not Started', order }),
+      });
+      state.subtasks.push(subtask);
+      render();
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
+  async function saveSubtask(id, patch) {
+    const subtask = state.subtasks.find((s) => s.id === id);
+    if (subtask) Object.assign(subtask, patch);
+    try {
+      await api(`/api/subtasks/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+    } catch (e) {
+      toast(e.message, true);
+    }
+  }
+
+  async function deleteSubtask(subtask) {
+    state.subtasks = state.subtasks.filter((s) => s.id !== subtask.id);
+    render();
+    try {
+      await api(`/api/subtasks/${subtask.id}`, { method: 'DELETE' });
+    } catch (e) {
+      toast(e.message, true);
+      loadBoard();
+    }
+  }
+
+  // ---------- Wiring ----------
+
+  els.refreshBtn.addEventListener('click', () => loadBoard(true));
+  els.addProjectBtn.addEventListener('click', () => { addingColumn = true; render(); });
+  els.tabBoard.addEventListener('click', () => setActiveTab('board'));
+  els.tabTasks.addEventListener('click', () => setActiveTab('tasks'));
+
+  loadBoard();
+  pollTimer = setInterval(() => loadBoard(), POLL_MS);
+})();
+
+</script>
 </body>
 </html>
