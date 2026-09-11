@@ -13,6 +13,7 @@
   };
   const STAT_ACCENTS = ['var(--blue-500)', 'var(--navy-900)', 'var(--orange-500)', 'var(--green-600)'];
   const STATUSES = ['Not Started', 'In Progress', 'Completed'];
+  const OWNER_NAMES = ['Maria', 'JuanSe', 'Santi'];
 
   const els = {
     board: document.getElementById('board'),
@@ -26,11 +27,19 @@
     gateInput: document.getElementById('gateInput'),
     gateSubmit: document.getElementById('gateSubmit'),
     gateError: document.getElementById('gateError'),
+    tabBoard: document.getElementById('tabBoard'),
+    tabTasks: document.getElementById('tabTasks'),
+    statsRowEl: document.getElementById('statsRow'),
+    myTasksView: document.getElementById('myTasksView'),
+    ownerFilter: document.getElementById('ownerFilter'),
+    taskList: document.getElementById('taskList'),
   };
 
   let state = { projects: [], subtasks: [] };
   let pollTimer = null;
   let addingColumn = false;
+  let activeTab = 'board';
+  let selectedOwners = new Set(OWNER_NAMES);
 
   // ---------- API ----------
 
@@ -94,8 +103,8 @@
 
   // ---------- Load & render ----------
 
-  async function loadBoard(showSpinner = false) {
-    if (showSpinner) els.refreshBtn.classList.add('spinning');
+  async function loadBoard(showAnimation = false) {
+    if (showAnimation) els.refreshBtn.classList.add('anchor-toss');
     try {
       const data = await api('/api/board');
       state.projects = data.projects.sort((a, b) => a.order - b.order);
@@ -108,13 +117,29 @@
         toast(e.message, true);
       }
     } finally {
-      setTimeout(() => els.refreshBtn.classList.remove('spinning'), 500);
+      setTimeout(() => els.refreshBtn.classList.remove('anchor-toss'), 700);
     }
   }
 
+  function setActiveTab(tab) {
+    activeTab = tab;
+    els.tabBoard.classList.toggle('tab-active', tab === 'board');
+    els.tabTasks.classList.toggle('tab-active', tab === 'tasks');
+    els.statsRowEl.hidden = tab !== 'board';
+    els.board.hidden = tab !== 'board';
+    els.boardEmpty.hidden = tab !== 'board' || state.projects.length > 0;
+    els.addProjectBtn.hidden = tab !== 'board';
+    els.myTasksView.hidden = tab !== 'tasks';
+    render();
+  }
+
   function render() {
-    renderStats();
-    renderColumns();
+    if (activeTab === 'board') {
+      renderStats();
+      renderColumns();
+    } else {
+      renderMyTasks();
+    }
   }
 
   function renderStats() {
@@ -140,6 +165,112 @@
       `;
       els.statsRow.appendChild(card);
     });
+  }
+
+  // ---------- My Tasks ----------
+
+  function renderMyTasks() {
+    renderOwnerFilter();
+    renderTaskList();
+  }
+
+  function renderOwnerFilter() {
+    els.ownerFilter.innerHTML = '';
+    const label = document.createElement('span');
+    label.className = 'owner-filter-label';
+    label.textContent = 'Show tasks for';
+    els.ownerFilter.appendChild(label);
+
+    OWNER_NAMES.forEach((name) => {
+      const pill = document.createElement('button');
+      pill.className = 'owner-pill' + (selectedOwners.has(name) ? ' active' : '');
+      pill.textContent = name;
+      pill.addEventListener('click', () => {
+        if (selectedOwners.has(name)) selectedOwners.delete(name);
+        else selectedOwners.add(name);
+        renderMyTasks();
+      });
+      els.ownerFilter.appendChild(pill);
+    });
+  }
+
+  function renderTaskList() {
+    els.taskList.innerHTML = '';
+
+    const matches = state.subtasks.filter((s) => {
+      if (selectedOwners.size === 0) return false;
+      const owner = (s.owner || '').toLowerCase();
+      return [...selectedOwners].some((name) => owner.includes(name.toLowerCase()));
+    });
+
+    matches.sort((a, b) => {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return a.dueDate.localeCompare(b.dueDate);
+    });
+
+    if (matches.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'task-list-empty';
+      empty.textContent = selectedOwners.size === 0
+        ? 'Select one or more names above to see their tasks.'
+        : 'No tasks found for the selected people.';
+      els.taskList.appendChild(empty);
+      return;
+    }
+
+    matches.forEach((s) => els.taskList.appendChild(renderTaskRow(s)));
+  }
+
+  function renderTaskRow(subtask) {
+    const row = document.createElement('div');
+    row.className = 'task-row';
+
+    const name = document.createElement('div');
+    name.className = 'task-row-name';
+    name.textContent = subtask.name || 'Untitled subtask';
+
+    const project = document.createElement('span');
+    project.className = 'task-row-project';
+    const projectObj = state.projects.find((p) => p.id === subtask.projectId);
+    project.textContent = projectObj ? projectObj.name : 'Unassigned project';
+
+    const owner = document.createElement('span');
+    owner.className = 'task-row-owner';
+    owner.textContent = subtask.owner || 'Unassigned';
+
+    const due = document.createElement('button');
+    due.className = 'task-row-due';
+    due.textContent = subtask.dueDate ? formatDate(subtask.dueDate) : 'No date';
+    if (isOverdue(subtask.dueDate, subtask.status)) due.classList.add('overdue');
+    due.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'date';
+      input.value = subtask.dueDate || '';
+      input.className = 'task-row-due';
+      due.replaceWith(input);
+      input.focus();
+      input.addEventListener('change', () => saveSubtask(subtask.id, { dueDate: input.value || null }));
+      input.addEventListener('blur', () => render());
+    });
+
+    const status = document.createElement('select');
+    status.className = `status-pill status-${subtask.status.toLowerCase().replace(/\s+/g, '-')}`;
+    STATUSES.forEach((s) => {
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s;
+      if (s === subtask.status) opt.selected = true;
+      status.appendChild(opt);
+    });
+    status.addEventListener('change', () => {
+      status.className = `status-pill status-${status.value.toLowerCase().replace(/\s+/g, '-')}`;
+      saveSubtask(subtask.id, { status: status.value });
+    });
+
+    row.append(name, project, owner, due, status);
+    return row;
   }
 
   function renderColumns() {
@@ -429,6 +560,35 @@
     return card;
   }
 
+  // Figures out where in the target column the card was dropped (based on
+  // cursor position relative to the other cards already there) and computes
+  // a fractional order value that slots it exactly into that spot — works
+  // the same whether it's a reorder within a column or a move to another one.
+  function computeInsertionOrder(projectId, excludeId, clientY, listEl) {
+    const siblingEls = [...listEl.querySelectorAll('.card-item')].filter(
+      (el) => el.dataset.subtaskId !== excludeId
+    );
+    let insertBeforeId = null;
+    for (const el of siblingEls) {
+      const rect = el.getBoundingClientRect();
+      if (clientY < rect.top + rect.height / 2) {
+        insertBeforeId = el.dataset.subtaskId;
+        break;
+      }
+    }
+
+    const siblings = state.subtasks
+      .filter((s) => s.projectId === projectId && s.id !== excludeId)
+      .sort((a, b) => a.order - b.order);
+
+    if (siblings.length === 0) return 1;
+    if (insertBeforeId === null) return siblings[siblings.length - 1].order + 1;
+
+    const idx = siblings.findIndex((s) => s.id === insertBeforeId);
+    if (idx === 0) return siblings[0].order - 1;
+    return (siblings[idx - 1].order + siblings[idx].order) / 2;
+  }
+
   function onDrop(e, projectId, listEl) {
     e.preventDefault();
     listEl.closest('.column').classList.remove('drag-over');
@@ -436,10 +596,8 @@
     const subtask = state.subtasks.find((s) => s.id === id);
     if (!subtask) return;
 
-    const siblings = state.subtasks.filter((s) => s.projectId === projectId && s.id !== id).sort((a, b) => a.order - b.order);
-    const newOrder = siblings.length ? siblings[siblings.length - 1].order + 1 : 1;
-
-    if (subtask.projectId === projectId && siblings.length === 0) return;
+    const newOrder = computeInsertionOrder(projectId, id, e.clientY, listEl);
+    if (subtask.projectId === projectId && subtask.order === newOrder) return;
 
     subtask.projectId = projectId;
     subtask.order = newOrder;
@@ -513,6 +671,8 @@
 
   els.refreshBtn.addEventListener('click', () => loadBoard(true));
   els.addProjectBtn.addEventListener('click', () => { addingColumn = true; render(); });
+  els.tabBoard.addEventListener('click', () => setActiveTab('board'));
+  els.tabTasks.addEventListener('click', () => setActiveTab('tasks'));
 
   loadBoard();
   pollTimer = setInterval(() => loadBoard(), POLL_MS);
