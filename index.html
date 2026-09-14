@@ -272,6 +272,14 @@ body {
 
 .card-item-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px; }
 
+.card-move-btn {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 9px; cursor: pointer; padding: 2px 3px; line-height: 1;
+  border-radius: 4px;
+}
+.card-move-btn:hover:not(:disabled) { background: var(--gray-100); color: var(--text); }
+.card-move-btn:disabled { color: var(--border-strong); cursor: not-allowed; }
+
 .card-detail-btn {
   background: none; border: none; color: var(--text-faint);
   font-size: 12px; cursor: pointer; padding: 0 2px; line-height: 1;
@@ -578,6 +586,14 @@ body {
   padding: 6px 8px;
   font-size: 13px;
   font-family: inherit;
+}
+.detail-project-select {
+  border: 1px solid var(--border-strong);
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  max-width: 200px;
 }
 .detail-meta-block .status-pill { width: auto; margin-top: 0; padding: 5px 12px; }
 
@@ -1119,7 +1135,7 @@ body {
       empty.textContent = 'No subtasks yet';
       list.appendChild(empty);
     } else {
-      subtasks.forEach((s) => list.appendChild(renderCard(s)));
+      subtasks.forEach((s, idx) => list.appendChild(renderCard(s, idx === 0, idx === subtasks.length - 1)));
     }
 
     const addBtn = document.createElement('button');
@@ -1222,7 +1238,7 @@ body {
 
   // ---------- Subtask card ----------
 
-  function renderCard(subtask) {
+  function renderCard(subtask, isFirst, isLast) {
     const card = document.createElement('div');
     card.className = 'card-item';
     card.draggable = true;
@@ -1256,6 +1272,20 @@ body {
     const btnGroup = document.createElement('div');
     btnGroup.className = 'card-btn-group';
 
+    const upBtn = document.createElement('button');
+    upBtn.className = 'card-move-btn';
+    upBtn.title = 'Move up';
+    upBtn.textContent = '▲';
+    upBtn.disabled = !!isFirst;
+    upBtn.addEventListener('click', () => moveSubtask(subtask, 'up'));
+
+    const downBtn = document.createElement('button');
+    downBtn.className = 'card-move-btn';
+    downBtn.title = 'Move down';
+    downBtn.textContent = '▼';
+    downBtn.disabled = !!isLast;
+    downBtn.addEventListener('click', () => moveSubtask(subtask, 'down'));
+
     const detailBtn = document.createElement('button');
     detailBtn.className = 'card-detail-btn';
     detailBtn.title = 'Description & links';
@@ -1268,7 +1298,7 @@ body {
     del.title = 'Delete subtask';
     del.addEventListener('click', () => deleteSubtask(subtask));
 
-    btnGroup.append(detailBtn, del);
+    btnGroup.append(upBtn, downBtn, detailBtn, del);
     topRow.append(name, btnGroup);
 
     const row = document.createElement('div');
@@ -1397,6 +1427,45 @@ body {
     saveSubtask(id, { projectId, order: newOrder });
   }
 
+  // Deterministic reorder buttons — the guaranteed-to-work alternative to
+  // drag and drop. Swaps position with the adjacent sibling in the same
+  // column using fractional order values (same math as the drag logic).
+  function moveSubtask(subtask, direction) {
+    const siblings = state.subtasks
+      .filter((s) => s.projectId === subtask.projectId)
+      .sort((a, b) => a.order - b.order);
+    const idx = siblings.findIndex((s) => s.id === subtask.id);
+    if (idx === -1) return;
+
+    let newOrder;
+    if (direction === 'up') {
+      if (idx === 0) return;
+      const prev = siblings[idx - 1];
+      const prevPrev = siblings[idx - 2];
+      newOrder = prevPrev ? (prevPrev.order + prev.order) / 2 : prev.order - 1;
+    } else {
+      if (idx === siblings.length - 1) return;
+      const next = siblings[idx + 1];
+      const nextNext = siblings[idx + 2];
+      newOrder = nextNext ? (next.order + nextNext.order) / 2 : next.order + 1;
+    }
+
+    subtask.order = newOrder;
+    render();
+    saveSubtask(subtask.id, { order: newOrder });
+  }
+
+  // Moves a card to another project's column, appending it at the end.
+  function moveSubtaskToProject(subtask, targetProjectId) {
+    if (targetProjectId === subtask.projectId) return;
+    const siblings = state.subtasks.filter((s) => s.projectId === targetProjectId);
+    const newOrder = siblings.length ? Math.max(...siblings.map((s) => s.order)) + 1 : 1;
+    subtask.projectId = targetProjectId;
+    subtask.order = newOrder;
+    saveSubtask(subtask.id, { projectId: targetProjectId, order: newOrder });
+    render();
+  }
+
   // ---------- Task detail modal (description + links) ----------
 
   function openTaskDetail(subtask) {
@@ -1465,7 +1534,31 @@ body {
     });
     statusBlock.append(statusLbl, statusSelect);
 
-    metaRow2.append(ownerBlock, dueBlock, statusBlock);
+    const moveBlock = document.createElement('div');
+    moveBlock.className = 'detail-meta-block';
+    const moveLbl = document.createElement('div');
+    moveLbl.className = 'detail-label';
+    moveLbl.textContent = 'Project';
+    const moveSelect = document.createElement('select');
+    moveSelect.className = 'detail-project-select';
+    state.projects.forEach((p) => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      if (p.id === subtask.projectId) opt.selected = true;
+      moveSelect.appendChild(opt);
+    });
+    moveSelect.addEventListener('change', () => {
+      const targetId = moveSelect.value;
+      if (targetId === subtask.projectId) return;
+      const targetProject = state.projects.find((p) => p.id === targetId);
+      moveSubtaskToProject(subtask, targetId);
+      toast(targetProject ? `Moved to ${targetProject.name}` : 'Moved');
+      close();
+    });
+    moveBlock.append(moveLbl, moveSelect);
+
+    metaRow2.append(ownerBlock, dueBlock, statusBlock, moveBlock);
 
     const descLbl = document.createElement('div');
     descLbl.className = 'detail-label';
