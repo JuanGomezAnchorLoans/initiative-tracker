@@ -1430,6 +1430,15 @@ body {
   // Deterministic reorder buttons — the guaranteed-to-work alternative to
   // drag and drop. Swaps position with the adjacent sibling in the same
   // column using fractional order values (same math as the drag logic).
+  let autoUpdateTimer = null;
+  function scheduleAutoUpdate() {
+    // Same effect as clicking the Update button, fired automatically half a
+    // second after an arrow click — debounced so several quick clicks only
+    // trigger one refresh, timed after the last one.
+    clearTimeout(autoUpdateTimer);
+    autoUpdateTimer = setTimeout(() => loadBoard(true), 500);
+  }
+
   function moveSubtask(subtask, direction) {
     const siblings = state.subtasks
       .filter((s) => s.projectId === subtask.projectId)
@@ -1453,6 +1462,7 @@ body {
     subtask.order = newOrder;
     render();
     saveSubtask(subtask.id, { order: newOrder });
+    scheduleAutoUpdate();
   }
 
   // Moves a card to another project's column, appending it at the end.
