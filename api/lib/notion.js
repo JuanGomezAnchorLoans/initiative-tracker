@@ -185,6 +185,72 @@ async function archiveSubtask(id) {
   await notion(`/pages/${id}`, { method: 'PATCH', body: JSON.stringify({ archived: true }) });
 }
 
+// ---------- Subtask detail (description + links, stored as page content) ----------
+// Notion doesn't let us add new database columns through this integration,
+// so the description/links live as blocks in the subtask page's own body:
+// block 0 is always a paragraph (the description, may be empty), and any
+// blocks after that are bulleted links. Every save wipes and rewrites all of
+// it — the content is always small, so this stays simple and never drifts.
+
+async function listBlockChildren(blockId) {
+  let results = [];
+  let cursor;
+  do {
+    const qs = cursor ? `?start_cursor=${cursor}&page_size=100` : '?page_size=100';
+    const data = await notion(`/blocks/${blockId}/children${qs}`);
+    results = results.concat(data.results);
+    cursor = data.has_more ? data.next_cursor : null;
+  } while (cursor);
+  return results;
+}
+
+function parseDetailBlocks(blocks) {
+  let description = '';
+  const links = [];
+  blocks.forEach((b, idx) => {
+    if (b.type === 'paragraph' && idx === 0) {
+      description = (b.paragraph.rich_text || []).map((t) => t.plain_text).join('');
+    } else if (b.type === 'bulleted_list_item') {
+      const rt = b.bulleted_list_item.rich_text || [];
+      const url = rt[0]?.href || rt.map((t) => t.plain_text).join('');
+      if (url) links.push(url);
+    }
+  });
+  return { description, links };
+}
+
+async function getSubtaskDetail(id) {
+  const blocks = await listBlockChildren(id);
+  return parseDetailBlocks(blocks);
+}
+
+async function setSubtaskDetail(id, { description, links }) {
+  const existing = await listBlockChildren(id);
+  await Promise.all(existing.map((b) => notion(`/blocks/${b.id}`, { method: 'DELETE' })));
+
+  const newBlocks = [
+    {
+      object: 'block',
+      type: 'paragraph',
+      paragraph: {
+        rich_text: description ? [{ type: 'text', text: { content: String(description).slice(0, 2000) } }] : [],
+      },
+    },
+  ];
+  (links || []).filter(Boolean).forEach((url) => {
+    newBlocks.push({
+      object: 'block',
+      type: 'bulleted_list_item',
+      bulleted_list_item: {
+        rich_text: [{ type: 'text', text: { content: url, link: { url } } }],
+      },
+    });
+  });
+
+  await notion(`/blocks/${id}/children`, { method: 'PATCH', body: JSON.stringify({ children: newBlocks }) });
+  return { description: description || '', links: (links || []).filter(Boolean) };
+}
+
 // ---------- Notion property builders/readers ----------
 
 function rt(arr) {
@@ -213,4 +279,6 @@ module.exports = {
   createSubtask,
   updateSubtask,
   archiveSubtask,
+  getSubtaskDetail,
+  setSubtaskDetail,
 };
